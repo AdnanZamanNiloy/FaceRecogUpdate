@@ -10,7 +10,7 @@ import time
 import dlib
 from imutils import face_utils
 from scipy.spatial import distance as dist
-import joblib  # Import joblib
+import joblib
 
 class Face_Recognition:
     def __init__(self, root):
@@ -19,13 +19,11 @@ class Face_Recognition:
         self.root.title("Face Recognition System")
         
         # Title label
-        title_lbl = Label(self.root, text="FACE RECOGNITION", font=(
-            "times new roman", 27, "bold"), bg="blue", fg="white")
+        title_lbl = Label(self.root, text="FACE RECOGNITION", font=("times new roman", 27, "bold"), bg="blue", fg="white")
         title_lbl.place(x=-3, y=0, width=1530, height=35)
         
         # Top image
-        img_top = Image.open(
-            r"F:\Desktop\Face Recognation Project\Face_Recog_Images\photo_2024-12-13_11-54-14.jpg")
+        img_top = Image.open(r"F:\Desktop\Face Recognation Project\Face_Recog_Images\photo_2024-12-13_11-54-14.jpg")
         img_top = img_top.resize((650, 700), Image.LANCZOS)
         self.photoimg_top = ImageTk.PhotoImage(img_top)
         
@@ -33,8 +31,7 @@ class Face_Recognition:
         f_lbl.place(x=0, y=40, width=650, height=700)
         
         # Bottom image
-        img_bottom = Image.open(
-            r"F:\Desktop\Face Recognation Project\Face_Recog_Images\photo_2024-12-13_11-54-21.jpg")
+        img_bottom = Image.open(r"F:\Desktop\Face Recognation Project\Face_Recog_Images\photo_2024-12-13_11-54-21.jpg")
         img_bottom = img_bottom.resize((950, 700), Image.LANCZOS)
         self.photoimg_bottom = ImageTk.PhotoImage(img_bottom)
         
@@ -42,10 +39,10 @@ class Face_Recognition:
         f_lbl.place(x=650, y=40, width=950, height=700)
         
         # Button
-        b1_1 = Button(f_lbl, text="Face Recognition", command=self.face_recog, cursor="hand2", font=(
-            "times new roman", 17, "bold"), bg="darkgreen", fg="white")
+        b1_1 = Button(f_lbl, text="Face Recognition", command=self.face_recog, cursor="hand2", font=("times new roman", 17, "bold"), bg="darkgreen", fg="white")
         b1_1.place(x=365, y=620, width=200, height=30)
-    
+        
+     
     # Face Recognition
     def face_recog(self):
         def draw_boundary(img, face_detector, landmarks_detector, face_rec_model, label_encoder, clf, blink_count, match_time):
@@ -56,13 +53,12 @@ class Face_Recognition:
             for face in faces_detected:
                 # Convert dlib.rectangle to full_object_detection using landmarks
                 landmarks = landmarks_detector(img, face)  # Pass the COLOR image here
-                face_descriptor = face_rec_model.compute_face_descriptor(img, landmarks) # Pass the COLOR image here
-                face_descriptor = np.array(face_descriptor).reshape(1, -1)  # Reshape for prediction
+                face_descriptor = face_rec_model.compute_face_descriptor(img, landmarks) #Pass the COLOR image here
+                face_descriptor = np.array(face_descriptor).reshape(1, -1)  #Reshape for prediction
 
                 id = clf.predict(face_descriptor)[0]
                 confidence = clf.predict_proba(face_descriptor)[0][id]
                 confidence = int(confidence * 100)
-
 
                 # Database connection
                 conn = mysql.connector.connect(
@@ -84,20 +80,32 @@ class Face_Recognition:
                 print(f"ID: {id}, Name: {info}, Confidence: {confidence}")
 
                 # Draw animated boundary
-                if confidence > 85 and blink_count >= 2:
+                if confidence > 92 and blink_count >= 1:
                     # Change the color of the outer rectangle after a match
                     outer_rect_color = (0, 255, 0)  # Green color after match
 
                     # Display details on the image
-                    cv2.putText(img, f"Reg No: {info1}", (x, y-55), cv2.FONT_HERSHEY_COMPLEX, 0.8, (255, 255, 255), 2)
-                    cv2.putText(img, f"Name: {info}", (x, y-30), cv2.FONT_HERSHEY_COMPLEX, 0.8, (255, 255, 255), 2)
+                    cv2.putText(img, f"Reg No: {info1}", (x, y-55), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0), 2)
+                    cv2.putText(img, f"Name: {info}", (x, y-30), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 255, 0), 2)
 
                     if match_time[0] is None:  # Capture match time once
                         match_time[0] = time.time()
                     matched = True
                 else:
-                    # Default color for the outer rectangle (before match)
-                    outer_rect_color = (0, 0, 255)  # Red color before match
+                    outer_rect_color = (255, 0, 0)  # Blue color before match
+
+                    text = "Unknown Face"
+                    text_size, _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_COMPLEX, 0.8, 2)
+
+                    # Calculate text background position dynamically
+                    text_x = x-12  # Align with face box
+                    text_y = max(y - 10, 10)  # Prevent going out of the image top border
+                    bg_width = text_size[0] + 10
+                    bg_height = text_size[1] + 10
+
+                    # Draw the blue rectangle background
+                    cv2.rectangle(img, (text_x, text_y - bg_height), (text_x + bg_width, text_y), (255, 0, 0), -1)
+                    cv2.putText(img, text, (text_x + 5, text_y - 5), cv2.FONT_HERSHEY_COMPLEX, 0.8, (255, 255, 255), 2)
 
                 # Draw the outer rectangle (always visible)
                 cv2.rectangle(img, (x-10, y-10), (x+w+10, y+h+10), outer_rect_color, 2)
@@ -170,17 +178,19 @@ class Face_Recognition:
                 right_ear = EAR_cal(right_eye)
                 avg_ear = (left_ear + right_ear) / 2
                 
-                # Eye landmarks
+                # Eye landmarks with straight lines
                 for pt in left_eye:
                     cv2.circle(img, pt, 1, (0, 255, 0), 1)
                 for pt in right_eye:
                     cv2.circle(img, pt, 1, (0, 255, 0), 1)
                     
-                #face landmarks
+                # Face landmarks
                 for (x, y) in shapes:
-                    cv2.circle(img, (x, y), 1, (0, 0, 255), -1)
-                       
+                    cv2.circle(img, (x, y), 1, (0, 255, 0), 1)  # Changed color to green
                 
+                
+                
+                        
                 # Check for blink
                 if avg_ear < blink_thres:
                     blink_counter += 1
@@ -197,7 +207,7 @@ class Face_Recognition:
                 break  # Close window 1 second after match
             
             img = cv2.resize(img, (720, 640))
-            cv2.imshow("vedio", img)  
+            cv2.imshow("vedio", img)
             
             if cv2.waitKey(1) == 13:  # Press Enter to exit
                 break
